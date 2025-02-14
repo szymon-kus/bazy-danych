@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista zamówień</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <h1>Lista zamówień</h1>
+    <table>
+        <tr>
+            <th>ID zamówienia</th>
+            <th>Użytkownik</th>
+            <th>Produkt</th>
+            <th>Ilość</th>
+            <th>Status</th>
+            <th>Data zamówienia</th>
+        </tr>
+        {% for order in orders %}
+        <tr>
+            <td>{{ order.order_id }}</td>
+            <td>{{ order.username }}</td>
+            <td>{{ order.product }}</td>
+            <td>{{ order.quantity }}</td>
+            <td>{{ order.status }}</td>
+            <td>{{ order.order_date }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    <a href="/">Powrót do strony głównej</a>
+</body>
+</html>

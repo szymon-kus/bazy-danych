@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sklep internetowy</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+    <header>
+        <h1>Witamy w sklepie internetowym</h1>
+        <img src="/static/shop.png" alt="Sklep internetowy">
+    </header>
+
+    <section>
+        <h2>Lista użytkowników</h2>
+        <table id="usersTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nazwa użytkownika</th>
+                    <th>Email</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+        <button id="loadMoreUsers">Załaduj więcej użytkowników</button>
+    </section>
+
+    <section>
+        <h2>Lista zamówień</h2>
+        <table id="ordersTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Użytkownik</th>
+                    <th>Produkt</th>
+                    <th>Ilość</th>
+                    <th>Status</th>
+                    <th>Data</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+        <button id="loadMoreOrders">Załaduj więcej zamówień</button>
+    </section>
+
+    <script>
+        let usersOffset = 0;
+        let ordersOffset = 0;
+        const limit = 100;
+
+        async function loadUsers() {
+            const response = await fetch(`/users/?limit=${limit}&offset=${usersOffset}`);
+            const data = await response.json();
+            const usersTable = document.getElementById("usersTable").getElementsByTagName("tbody")[0];
+
+            data.forEach(user => {
+                let row = usersTable.insertRow();
+                row.innerHTML = `<td>${user.id}</td>
+                                 <td>${user.username}</td>
+                                 <td>${user.email}</td>`;
+            });
+
+            usersOffset += limit;
+            if (data.length < limit) {
+                document.getElementById("loadMoreUsers").style.display = "none";
+            }
+        }
+
+        async function loadOrders() {
+            const response = await fetch(`/orders/all?limit=${limit}&offset=${ordersOffset}`);
+            const data = await response.json();
+            const ordersTable = document.getElementById("ordersTable").getElementsByTagName("tbody")[0];
+
+            data.orders.forEach(order => {
+                let row = ordersTable.insertRow();
+                row.innerHTML = `<td>${order.order_id}</td>
+                                 <td>${order.username}</td>
+                                 <td>${order.product}</td>
+                                 <td>${order.quantity}</td>
+                                 <td>${order.status}</td>
+                                 <td>${order.order_date}</td>`;
+            });
+
+            ordersOffset += limit;
+            if (data.orders.length < limit) {
+                document.getElementById("loadMoreOrders").style.display = "none";
+            }
+        }
+
+        document.getElementById("loadMoreUsers").addEventListener("click", loadUsers);
+        document.getElementById("loadMoreOrders").addEventListener("click", loadOrders);
+
+        loadUsers();
+        loadOrders();
+    </script>
+
+</body>
+</html>
