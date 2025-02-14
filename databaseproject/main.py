@@ -10,12 +10,10 @@ import crud
 app = FastAPI()
 crud.init_db()
 
-# Montowanie katalogów statycznych i szablonów
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
 
-# === STRONA GŁÓWNA ===
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
@@ -23,7 +21,7 @@ async def home(request: Request):
 
 @app.get("/users/")
 async def get_users(limit: int = 100, offset: int = 0):
-    users = sorted(crud.get_all_users(), key=lambda user: user.username)  # Sortowanie po username
+    users = sorted(crud.get_all_users(), key=lambda user: user.username)  
     paginated_users = users[offset:offset + limit]
     return [{"id": str(user.id), "username": user.username, "email": user.email} for user in paginated_users]
 
@@ -44,12 +42,11 @@ def get_all_orders(limit: int = 100, offset: int = 0):
             "order_date": row.order_date.strftime("%Y-%m-%d %H:%M:%S") if row.order_date else "Brak daty"
         })
 
-    sorted_orders = sorted(orders, key=lambda order: order["username"])  # Sortowanie po username
+    sorted_orders = sorted(orders, key=lambda order: order["username"])  
     paginated_orders = sorted_orders[offset:offset + limit]
     return {"orders": paginated_orders}
 
 
-# === PODSTRONA ZAMÓWIEŃ KONKRETNEGO UŻYTKOWNIKA ===
 @app.get("/orders/{username}", response_class=HTMLResponse)
 async def get_orders_by_username(request: Request, username: str):
     query = "SELECT * FROM orders WHERE username = %s ALLOW FILTERING"
