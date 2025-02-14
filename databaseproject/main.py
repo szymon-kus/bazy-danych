@@ -1,10 +1,13 @@
+import uuid
+from datetime import datetime
+
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi import HTTPException
 from database import get_db
-from models import UserCreate, Order
+from models import UserCreate, OrderCreate, Order
 import crud
 
 app = FastAPI()
@@ -21,7 +24,7 @@ async def home(request: Request):
 
 @app.get("/users/")
 async def get_users(limit: int = 100, offset: int = 0):
-    users = sorted(crud.get_all_users(), key=lambda user: user.username)  
+    users = sorted(crud.get_all_users(), key=lambda user: user.username) 
     paginated_users = users[offset:offset + limit]
     return [{"id": str(user.id), "username": user.username, "email": user.email} for user in paginated_users]
 
@@ -47,6 +50,7 @@ def get_all_orders(limit: int = 100, offset: int = 0):
     return {"orders": paginated_orders}
 
 
+
 @app.get("/orders/{username}", response_class=HTMLResponse)
 async def get_orders_by_username(request: Request, username: str):
     query = "SELECT * FROM orders WHERE username = %s ALLOW FILTERING"
@@ -57,3 +61,24 @@ async def get_orders_by_username(request: Request, username: str):
         raise HTTPException(status_code=404, detail="Orders not found")
 
     return templates.TemplateResponse("orders_user.html", {"request": request, "username": username, "orders": results})
+
+@app.post("/newuser/")
+def register_user(user: UserCreate):
+    existing_user = crud.get_user_by_username(user.username)
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Użytkownik już istnieje")
+
+    new_user = crud.create_user(user.username, user.email, user.password)
+
+    if not new_user:
+        raise HTTPException(status_code=500, detail="Błąd przy tworzeniu użytkownika")
+
+    return {
+        "message": "Użytkownik zarejestrowany",
+        "user": new_user
+    }
+
+@app.post("/neworder/")
+def create_order(order: Order):
+    order_id = crud.create_order(order)
+    return {"message": "Zamówienie utworzone i zapisane w bazie oraz CSV", "order_id": str(order_id)}
