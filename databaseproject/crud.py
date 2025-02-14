@@ -22,6 +22,7 @@ def init_db():
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
 
+
 def save_user_to_csv(user_id: str, username: str, email: str):
     file_exists = os.path.exists(CSV_FILE)
 
@@ -36,7 +37,7 @@ def save_user_to_csv(user_id: str, username: str, email: str):
 
 def create_user(username: str, email: str, password: str):
     try:
-        session.set_keyspace('shop')
+        session.set_keyspace('shop')  # Upewniamy się, że keyspace jest ustawiony
 
         user_id = uuid.uuid4()
         hashed_password = hash_password(password)
@@ -49,17 +50,21 @@ def create_user(username: str, email: str, password: str):
         return {"id": str(user_id), "username": username, "email": email}
 
     except Exception as e:
-        print(f"Błąd w create_user: {e}")
+        print(f"Błąd w create_user: {e}")  
         raise
+
 
 def get_all_users():
     query = "SELECT id, username, email FROM users"
     rows = session.execute(query)
     return rows
 
+
 def create_order(order):
     query = "INSERT INTO orders (id, username, product, quantity, status, order_date) VALUES (%s, %s, %s, %s, %s, %s)"
     session.execute(query, (order.id, order.username, order.product, order.quantity, order.status, order.order_date))
+
+
     save_order_to_csv(order)
 
 
@@ -71,6 +76,7 @@ def save_order_to_csv(order):
 
         if not file_exists:
             writer.writerow(["id", "username", "product", "quantity", "status", "order_date"])
+
 
         writer.writerow([order.id, order.username, order.product, order.quantity, order.status, order.order_date])
 
@@ -90,4 +96,12 @@ def get_all_orders():
     orders = [dict(row) for row in rows]
     return orders
 
-
+def get_user_by_username(username: str):
+    try:
+        session.set_keyspace('shop')
+        query = "SELECT * FROM users WHERE username = %s ALLOW FILTERING"
+        result = session.execute(query, (username,))
+        return result.one()
+    except Exception as e:
+        print(f"Błąd w get_user_by_username: {e}")
+        raise
